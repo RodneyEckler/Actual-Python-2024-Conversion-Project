@@ -1,0 +1,30 @@
+Run1850: cap scan, 0 to -3080, jun27
+Started: 6/27/2024 10:36:45 AM
+Sample Interval (s): 3.00000000
+Oversamples per Sample: 360.00
+Oversampling Rate (Hz): 120.00
+Lockin Time Constant: 1 s
+Laser Frequency: 500.000000 Hz
+Sum Lockin Scale: 100 mV/nA
+DiffX Lockin Scale: 100 mV/nA
+DiffY Lockin Scale: 100 mV/nA
+Torsion Period: 314.820000
+Theta Calibration: 0.994500
+
+Name		Channel	Diff?	ADC Range	cal1 (unit)	cal2(unit)
+---------------------------------------------------------------------------
+Sum         	0	Yes	-10  to 10 	1 (V)		0 (None)
+DiffX       	1	Yes	-10  to 10 	1 (V)		0 (None)
+DiffY       	2	Yes	-10  to 10 	1 (V)		0 (None)
+TiltX       	3	Yes	-10  to 10 	100 (urad)		0 (None)
+TiltY       	4	Yes	-10  to 10 	100 (urad)		0 (None)
+Tilt Temp   	5	Yes	-10  to 10 	100 (degC)		0 (None)
+Front Electrode	6	Yes	-10  to 10 	1 (V)		0 (None)
+Back Electrode	7	Yes	-10  to 10 	1 (V)		0 (None)
+Tilt Ctrl Vx	16	Yes	-10  to 10 	1 (V)		0 (None)
+Tilt Ctrl Vy	17	Yes	-10  to 10 	1 (V)		0 (None)
+AD590 Temp 4	18	Yes	-10  to 10 	1.74 (K)		0
+Encoder		33	Yes	-10  to 10 	1 (mm)			0 (None)
+Capacitance	34	Yes	-10  to 10 	1 (pF)			0 (None)
+TimeStamp	35	Yes	-10  to 10 	1 (s)			0 (None)
+
