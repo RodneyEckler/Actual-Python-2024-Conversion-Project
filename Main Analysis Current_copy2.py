@@ -7,7 +7,7 @@ matplotlib.use('TkAgg')
 from lmfit import minimize, Parameters, Parameter, report_fit
 
 
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk#Agg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
 import matplotlib.gridspec as gridspec
 #import matplotlib.pyplot as plt
@@ -19,9 +19,9 @@ import scipy
 from scipy.optimize import curve_fit
 from scipy.optimize import leastsq
 import sys
-import RO.Wdg
+from RO import Wdg
 import Pmw
-import RO.Alg
+from RO import Alg
 import csv
 
 import os
@@ -39,16 +39,16 @@ class NoteBook(Pmw.NoteBook):
             ## set up the notebook
             Pmw.NoteBook.__init__(self, master, **kargs)
 
-            self.FuncCall = RO.Alg.GenericCallback
+            self.FuncCall = Alg.GenericCallback
 
             self.nb = Pmw.NoteBook(master)
             self.nb.pack(fill='both', expand=1)
 
             self.p1 = self.nb.add(' Main ')
-            self.gr_p1 = RO.Wdg.Gridder(self.p1)
+            self.gr_p1 = Wdg.Gridder(self.p1)
 
             self.p2 = self.nb.add(' Fit ')
-            self.gr_p2 = RO.Wdg.Gridder(self.p2)
+            self.gr_p2 = Wdg.Gridder(self.p2)
 
 
             # initialize values
@@ -58,14 +58,19 @@ class NoteBook(Pmw.NoteBook):
             self.nreads = 0  #number of reads in run
             self.sampleInterval = 1.0  #time bewtween reads
             self.overSamplingRate = 10.0  #oversamplig rate in Hz
-            self.sensors = []
-            self.dataDir="C:\\Users\ttl26\Downloads\Python 2024 Conversion Project Handout\Python 2024 Conversion Project Handout\Fake Data\\"
-            #this is the one that we use in the lab
-            #self.dataDir="C:\\LabVIEW Data\\Data\\" 
+            self.sensors = []  #list of sensor properties TBD
+#            self.dataDir = os.path.join(os.path.expanduser("~"), "Documents", "Gravity Lab", "Python", "Data", "") #a platform and user independent solution
+#            self.hdrDir = os.path.join(os.path.expanduser("~"), "Documents", "Gravity Lab", "Python", "Headers", "") 
+##            self.dataDir = "C:\\Users\\Jare\\Desktop\\Gravity Lab\\Python\\Data\\"  #data file directory Jeremy
+##            self.hdrDir = "C:\\Users\\Jare\\Desktop\\Gravity Lab\\Python\\Headers\\"  #header file directory Jeremy
+            #self.dataDir ="C:\\Users\\cdh33\\Documents\\My Dropbox\\LabVIEW Data\\Data\\"         #data file directory office
+            #self.hdrDir = "C:\\Users\\cdh33\\Documents\\My Dropbox\\LabVIEW Data\\Headers\\"      #header file directory office
+            #self.dataDir="D:\\LabVIEW Data\\data\\" #Acquisition computer
+            #self.hdrDir="D:\\LabVIEW Data\\headers\\" #Acquisition computer
+            #self.dataDir="L:\\phyx-hoyle-research\LabVIEW Data\\data\\" #Network #TEMPORARY FIX 02.27.2020
+            self.dataDir="C:\\LabVIEW Data\\Data\\"
             #self.hdrDir="L:\\phyx-hoyle-research\LabVIEW Data\\headers\\" #Network
-            self.hdrDir="C:\\Users\ttl26\Downloads\Python 2024 Conversion Project Handout\Python 2024 Conversion Project Handout\Fake Header\\"
-            #this is the one that we use in the lab
-            #self.hdrDir="C:\\LabVIEW Data\\Headers\\"
+            self.hdrDir="C:\\LabVIEW Data\\Headers\\"
             self.chanNamesDict = {}  #names of Data Channels taken from header file. format example: {0:'Sum, etc.}
             self.cal1Dict = {}  #dictionary of linear calibration coefficients
             self.cal2Dict = {}  #dictionary of quadratic calibration coefficients
@@ -100,7 +105,7 @@ class NoteBook(Pmw.NoteBook):
             # Main Page Widgets
 
             #read data button
-            self.readDataButton = RO.Wdg.Button(
+            self.readDataButton = Wdg.Button(
                     master=self.p1,
                     text='Read Data',
                     state='disabled',
@@ -111,7 +116,7 @@ class NoteBook(Pmw.NoteBook):
             self.buttonList.append(self.readDataButton)
 
             #Run number to be analyzed
-            self.runNumWdg = RO.Wdg.IntEntry(self.p1,
+            self.runNumWdg = Wdg.IntEntry(self.p1,
                                                                              defValue=None,
                                                                              minValue=00000,
                                                                              maxValue=99999,
@@ -123,7 +128,7 @@ class NoteBook(Pmw.NoteBook):
             self.runNumWdg.bind('<Return>', self.FuncCall(self.setRunNum, ))
 
             #data directory
-            self.dataDirWdg = RO.Wdg.StrEntry(self.p1,
+            self.dataDirWdg = Wdg.StrEntry(self.p1,
                                                                               defValue=self.dataDir,
                                                                               autoIsCurrent=False,
                                                                               isCurrent=True,
@@ -134,7 +139,7 @@ class NoteBook(Pmw.NoteBook):
             self.dataDirWdg.bind('<Return>', self.FuncCall(self.setDataDir, ))
 
             #header directory
-            self.hdrDirWdg = RO.Wdg.StrEntry(self.p1,
+            self.hdrDirWdg = Wdg.StrEntry(self.p1,
                                                                              defValue=self.hdrDir,
                                                                              autoIsCurrent=False,
                                                                              isCurrent=True,
@@ -145,64 +150,64 @@ class NoteBook(Pmw.NoteBook):
             self.hdrDirWdg.bind('<Return>', self.FuncCall(self.setHdrDir, ))
 
             # run title
-            self.runTitleWdg = RO.Wdg.StrLabel(self.p1,
+            self.runTitleWdg = Wdg.StrLabel(self.p1,
                                                                                text='',
                                                                                helpText='run title'
             )
 
             # sampling rate
-            self.samplingIntervalWdg = RO.Wdg.FloatLabel(self.p1,
+            self.samplingIntervalWdg = Wdg.FloatLabel(self.p1,
                                                                                                      defValue=None,
                                                                                                      helpText=' sampling rate'
             )
 
             # oversampling rate
-            self.oversamplingRateWdg = RO.Wdg.FloatLabel(self.p1,
+            self.oversamplingRateWdg = Wdg.FloatLabel(self.p1,
                                                                                                      defValue=None,
                                                                                                      helpText=' oversampling rate'
             )
 
             # oversamples per sample
-            self.oversamplesPerSampleWdg = RO.Wdg.FloatLabel(self.p1,
+            self.oversamplesPerSampleWdg = Wdg.FloatLabel(self.p1,
                                                                                                              defValue=None,
                                                                                                              helpText=' oversamples per sample')
             #Laser Frequency (Hz)
-            self.LaserFrequencyWdg = RO.Wdg.Label(self.p1,
+            self.LaserFrequencyWdg = Wdg.Label(self.p1,
                                                                                                defValue=None,
                                                                                                helpText=' Laser Frequency')
 
             #Lockin Time Constant
-            self.LockinTimeConstantWdg = RO.Wdg.Label(self.p1,
+            self.LockinTimeConstantWdg = Wdg.Label(self.p1,
                                                                                                     defValue=None,
                                                                                                     helpText='Lockin Time Constant')
             
             # oversampling rate
-            self.oversamplingRateWdg = RO.Wdg.FloatLabel(self.p1,
+            self.oversamplingRateWdg = Wdg.FloatLabel(self.p1,
                                                                                                      defValue=None,
                                                                                                      helpText=' Oversampling Rate'
             )
 
             #Sum Lockin Scale
-            self.SumLockinScaleWdg = RO.Wdg.Label(self.p1,
+            self.SumLockinScaleWdg = Wdg.Label(self.p1,
                                                                                              defValue=None,
                                                                                              helpText=' Sum Lockin Scale')
 
             #DiffX Lockin Scale
-            self.DiffxLockinScaleWdg = RO.Wdg.Label(self.p1,
+            self.DiffxLockinScaleWdg = Wdg.Label(self.p1,
                                                                                                      defValue=None,
                                                                                                      helpText=' Diffx Lockin Scale')
 
             #DiffY Lockin Scale
-            self.DiffyLockinScaleWdg = RO.Wdg.Label(self.p1,
+            self.DiffyLockinScaleWdg = Wdg.Label(self.p1,
                                                                                                      defValue=None,
                                                                                                      helpText=' Diffy Lockin Scale')
             #Torsion Period
-            self.TorsionPeriodWdg = RO.Wdg.Label(self.p1,
+            self.TorsionPeriodWdg = Wdg.Label(self.p1,
                                                                                                      defValue=None,
                                                                                                      helpText =' Torsion Period')
 
             # initial time to analyze
-            self.timeInitWdg = RO.Wdg.FloatEntry(self.p1,
+            self.timeInitWdg = Wdg.FloatEntry(self.p1,
                                                                                      defValue=self.tInit,
                                                                                      autoIsCurrent=False,
                                                                                      isCurrent=True,
@@ -216,7 +221,7 @@ class NoteBook(Pmw.NoteBook):
             self.entryList.append(self.timeInitWdg)
 
             # final time to analyze
-            self.timeFinWdg = RO.Wdg.FloatEntry(self.p1,
+            self.timeFinWdg = Wdg.FloatEntry(self.p1,
                                                                                     autoIsCurrent=False,
                                                                                     isCurrent=True,
                                                                                     defValue=self.tInit,
@@ -229,7 +234,7 @@ class NoteBook(Pmw.NoteBook):
             self.entryList.append(self.timeFinWdg)
 
             # Quit Button
-            self.quitButton = RO.Wdg.Button(
+            self.quitButton = Wdg.Button(
                     master=self.p1,
                     text='Quit',
                     width=20,
@@ -238,7 +243,7 @@ class NoteBook(Pmw.NoteBook):
             )
 
             #plot data button
-            self.rawPlotButton = RO.Wdg.Button(
+            self.rawPlotButton = Wdg.Button(
                     master=self.p1,
                     text='Plot Data',
                     width=20,
@@ -249,7 +254,7 @@ class NoteBook(Pmw.NoteBook):
             self.buttonList.append(self.rawPlotButton)
 
             #plot fft data button
-            self.fftPlotButton = RO.Wdg.Button(
+            self.fftPlotButton = Wdg.Button(
                     master=self.p1,
                     text='FFT Plot',
                     width=20,
@@ -260,7 +265,7 @@ class NoteBook(Pmw.NoteBook):
             self.buttonList.append(self.fftPlotButton)
 
             #plot torsion filter button
-            self.TorsionFilterPlotButton = RO.Wdg.Button(
+            self.TorsionFilterPlotButton = Wdg.Button(
                     master=self.p1,
                     text='Torsion Filter Plot',
                     width=20,
@@ -271,7 +276,7 @@ class NoteBook(Pmw.NoteBook):
             self.buttonList.append(self.TorsionFilterPlotButton)
 
             #torsion filtered fft plot button
-            self.TorsionFftPlotButton = RO.Wdg.Button(
+            self.TorsionFftPlotButton = Wdg.Button(
                     master=self.p1,
                     text='Torsion fft plot',
                     width=20,
@@ -282,7 +287,7 @@ class NoteBook(Pmw.NoteBook):
             self.buttonList.append(self.TorsionFftPlotButton)
 
             #calibration checkbutton
-            self.calOn = RO.Wdg.Checkbutton(
+            self.calOn = Wdg.Checkbutton(
                     master=self.p1,
                     text="Apply Calibration Coefficients",
                     selectcolor='white',
@@ -293,7 +298,7 @@ class NoteBook(Pmw.NoteBook):
             self.calOn.bind('<ButtonRelease-1>', self.FuncCall(self.setCal))
 
             #subtract polynomial fit
-            self.polyOrderWdg = RO.Wdg.IntEntry(self.p1,
+            self.polyOrderWdg = Wdg.IntEntry(self.p1,
                                                                                     autoIsCurrent=False,
                                                                                     isCurrent=True,
                                                                                     defValue=-1,
@@ -344,7 +349,7 @@ class NoteBook(Pmw.NoteBook):
             ##Fit page widgets
             #
             #set length of cuts in seconds
-            self.cutLengthWdg = RO.Wdg.FloatEntry(self.p2,
+            self.cutLengthWdg = Wdg.FloatEntry(self.p2,
                                                                                       autoIsCurrent=False,
                                                                                       isCurrent=True,
                                                                                       defValue=0.00,
@@ -357,7 +362,7 @@ class NoteBook(Pmw.NoteBook):
             self.entryList.append(self.cutLengthWdg)
 
             #set polynomial order for cuts
-            self.polyOrderCutWdg = RO.Wdg.IntEntry(self.p2,
+            self.polyOrderCutWdg = Wdg.IntEntry(self.p2,
                                                                                        autoIsCurrent=False,
                                                                                        isCurrent=True,
                                                                                        defValue=1,
@@ -370,7 +375,7 @@ class NoteBook(Pmw.NoteBook):
             self.entryList.append(self.polyOrderCutWdg)
 
             #cut and fit data
-            self.cutPlotButton = RO.Wdg.Button(
+            self.cutPlotButton = Wdg.Button(
                     master=self.p2,
                     text='Cut and Fit',
                     width=20,
@@ -381,7 +386,7 @@ class NoteBook(Pmw.NoteBook):
             self.buttonList.append(self.cutPlotButton)
 
             #Torsion filter fit checkbox
-            self.TorsionOn = RO.Wdg.Checkbutton(
+            self.TorsionOn = Wdg.Checkbutton(
                     master=self.p2,
                     text="Apply Torsion Filter",
                     selectcolor='white',
@@ -392,7 +397,7 @@ class NoteBook(Pmw.NoteBook):
             self.calOn.bind('<ButtonRelease-1>', self.FuncCall(self.setCal))
 
             #harmonic entry
-            self.harmWdg = RO.Wdg.StrEntry(self.p2,
+            self.harmWdg = Wdg.StrEntry(self.p2,
                                                                        defValue='',
                                                                        autoIsCurrent=False,
                                                                        isCurrent=True,
@@ -403,7 +408,7 @@ class NoteBook(Pmw.NoteBook):
             self.harmWdg.bind('<Return>', self.FuncCall(self.setHarm, ))
 
              # initial time to analyze
-            self.timeInitCutWdg = RO.Wdg.FloatEntry(self.p2,
+            self.timeInitCutWdg = Wdg.FloatEntry(self.p2,
                                                                                      defValue=self.tInit,
                                                                                      autoIsCurrent=False,
                                                                                      isCurrent=True,
@@ -417,7 +422,7 @@ class NoteBook(Pmw.NoteBook):
             self.entryList.append(self.timeInitCutWdg)
 
             # final time to analyze
-            self.timeFinCutWdg = RO.Wdg.FloatEntry(self.p2,
+            self.timeFinCutWdg = Wdg.FloatEntry(self.p2,
                                                                                     autoIsCurrent=False,
                                                                                     isCurrent=True,
                                                                                     defValue=self.tInit,
@@ -455,17 +460,17 @@ class NoteBook(Pmw.NoteBook):
 
             hdrReader = csv.reader(open(filename, 'rb'), delimiter=' ')
 
-            hdrReader.next()
-            hdrReader.next()
-            hdrReader.next()
+            next(hdrReader)
+            next(hdrReader)
+            next(hdrReader)
 
             self.sampleInterval = float(hdrReader.next()[0])
 
-            hdrReader.next()
-            hdrReader.next()
-            hdrReader.next()
+            next(hdrReader)
+            next(hdrReader)
+            next(hdrReader)
 
-            a = hdrReader.next()
+            a = next(hdrReader)
 
             self.runTitle = ''
 
@@ -474,7 +479,7 @@ class NoteBook(Pmw.NoteBook):
 
             self.runTitleWdg.set(self.runTitle)
 
-            b = hdrReader.next()
+            b = next(hdrReader)
 
             #if len(b) <5:
             #hdrReader.next()
@@ -488,10 +493,10 @@ class NoteBook(Pmw.NoteBook):
 
             self.LockinTC = float(hdrReader.next()[-1])
 
-            hdrReader.next()
-            hdrReader.next()
-            hdrReader.next()
-            hdrReader.next()
+            next(hdrReader)
+            next(hdrReader)
+            next(hdrReader)
+            next(hdrReader)
 
             sens = 0
 
@@ -531,7 +536,7 @@ class NoteBook(Pmw.NoteBook):
 
             hdrReader = csv.reader(open(filename, 'rb'), delimiter=' ')
 
-            a = hdrReader.next()
+            a = next(hdrReader)
             self.runTitle = ''
             for i in a:
                     self.runTitle += ' ' + i
@@ -539,12 +544,12 @@ class NoteBook(Pmw.NoteBook):
             self.runTitleWdg.set(self.runTitle)
 
             #b = hdrReader.next() ##needed??
-            hdrReader.next() # delete if above line is needed
+            next(hdrReader) # delete if above line is needed
 
             self.sampleInterval = float(hdrReader.next()[-1])
             self.samplingIntervalWdg.set(self.sampleInterval) #sets sampling interval to the Wdg
 
-            hdrReader.next() #skips oversamples per sample in header file
+            next(hdrReader) #skips oversamples per sample in header file
 
             self.oversampleInterval = float(hdrReader.next()[-1])
             self.oversamplingRateWdg.set(self.oversampleInterval)  #oversampling rate
@@ -555,7 +560,7 @@ class NoteBook(Pmw.NoteBook):
                 self.SumLockinScale = float(hdrReader.next()[-1])
                 self.DiffxLockinScale = float(hdrReader.next()[-1])
                 self.DiffyLockinScale = float(hdrReader.next()[-1])
-                hdrReader.next()
+                next(hdrReader)
             elif int(self.runNum)>735:
                 self.LockinTimeConstant = ' '.join(hdrReader.next()[3:5])
                 self.LaserFrequency = ' '.join(hdrReader.next() [2:5])
@@ -570,7 +575,7 @@ class NoteBook(Pmw.NoteBook):
                 self.SumLockinScale=' '.join(hdrReader.next() [3:5])
                 self.DiffxLockinScale=' '.join(hdrReader.next() [3:5])
                 self.DiffyLockinScale=' '.join(hdrReader.next() [3:5])
-                hdrReader.next()
+                next(hdrReader)
             self.LockinTimeConstantWdg.set(self.LockinTimeConstant)
             self.LaserFrequencyWdg.set(self.LaserFrequency)
             self.SumLockinScaleWdg.set(self.SumLockinScale)
@@ -580,9 +585,9 @@ class NoteBook(Pmw.NoteBook):
 
             self.ttor = self.ttor/self.sampleInterval
 
-            hdrReader.next()
-            hdrReader.next()
-            hdrReader.next()
+            next(hdrReader)
+            next(hdrReader)
+            next(hdrReader)
 
             sens = 0
 
@@ -637,7 +642,7 @@ class NoteBook(Pmw.NoteBook):
             self.polyOrderWdg.set(self.polyOrder)
 
             datReader = csv.reader(open(filename, 'rb'), delimiter='\t')
-            firstRow = datReader.next()
+            firstRow = next(datReader)
             self.nSensors = len(firstRow)  # number of sensors read in
             self.sensDat = []
             floatRow0 = []
@@ -647,8 +652,8 @@ class NoteBook(Pmw.NoteBook):
 
             if self.calOn.getBool(): 
                     for i in range(self.nSensors): #takes cal coefficient from each sens
-                            cal1.append(self.cal1Dict.values()[i][0])
-                            cal2.append(self.cal2Dict.values()[i][0])
+                            cal1.append(list(self.cal1Dict.values())[i][0])
+                            cal2.append(list(self.cal2Dict.values())[i][0])
             else:
                     cal1 = num.ones(self.nSensors, float)
                     cal2 = num.zeros(self.nSensors, float)
@@ -680,14 +685,14 @@ class NoteBook(Pmw.NoteBook):
             # useful indices to have for later
             for i in range(len(self.chanNamesDict)):
                     if self.chanNamesDict[i] == 'Sum':
-                            self.sumIndex = self.chanNamesDict.keys()[i]
+                            self.sumIndex = list(self.chanNamesDict.keys())[i]
                     if self.chanNamesDict[i] == 'DiffX':
-                            self.diffXIndex = self.chanNamesDict.keys()[i]
+                            self.diffXIndex = list(self.chanNamesDict.keys())[i]
                     if self.chanNamesDict[i] == 'DiffY':
-                        self.diffYIndex = self.chanNamesDict.keys()[i]
+                        self.diffYIndex = list(self.chanNamesDict.keys())[i]
 
             # calculate thetaX and append to data array
-            if 'DiffX' and 'Sum' in self.chanNamesDict.values():
+            if 'DiffX' and 'Sum' in list(self.chanNamesDict.values()):
                     DiffOverSumX = num.divide(self.datArray[self.diffXIndex], self.datArray[self.sumIndex])
                     if int(self.runNum)<685:
                         c1=1
@@ -713,7 +718,7 @@ class NoteBook(Pmw.NoteBook):
                     self.nSensors += 1
 
             # calculate thetaY and append to data array
-            if 'DiffY' and 'Sum' in self.chanNamesDict.values():
+            if 'DiffY' and 'Sum' in list(self.chanNamesDict.values()):
 
                     DiffOverSumY = num.divide(self.datArray[self.diffYIndex], self.datArray[self.sumIndex])
                     c1 = self.thetaYcal1
@@ -733,9 +738,9 @@ class NoteBook(Pmw.NoteBook):
             # these are useful indices to have for later
             for i in range(len(self.chanNamesDict)):
                     if self.chanNamesDict[i] == 'ThetaX':
-                            self.thetaXIndex = self.chanNamesDict.keys()[i]
+                            self.thetaXIndex = list(self.chanNamesDict.keys())[i]
                     if self.chanNamesDict[i] == 'ThetaY':
-                            self.thetaYIndex = self.chanNamesDict.keys()[i]
+                            self.thetaYIndex = list(self.chanNamesDict.keys())[i]
 
             self.tInit = self.timeArray[0]
             self.tFin = self.timeArray[-1]
@@ -764,12 +769,12 @@ class NoteBook(Pmw.NoteBook):
 
             self.delPlots()
 
-            if 'DiffY' and 'Sum' in self.chanNamesDict.values():
+            if 'DiffY' and 'Sum' in list(self.chanNamesDict.values()):
 
                     ## make scatter plot of XY/Sum
                     xy = self.nb.add(' XY ')
                     self.pageList.append(xy)
-                    self.gridderList.append(RO.Wdg.Gridder(xy))
+                    self.gridderList.append(Wdg.Gridder(xy))
 
                     xyf = Figure(figsize=(4, 4), dpi=100)
                     plt = xyf.add_subplot(111)
@@ -791,7 +796,7 @@ class NoteBook(Pmw.NoteBook):
                     try:
                         canvas.show()
                     except OverflowError: # if data is too large
-                        print ("Data are too large to plot.")
+                        print( "Data are too large to plot.")
                     canvas.get_tk_widget().pack(side=Tk.TOP, fill=Tk.BOTH, expand=1)
 
                     toolbar = NavigationToolbar2TkAgg(canvas, xy)
@@ -803,7 +808,7 @@ class NoteBook(Pmw.NoteBook):
                     for i in range(self.nSensors):
                             a = self.nb.add(self.chanNamesDict[i])
                             self.pageList.append(a)
-                            self.gridderList.append(RO.Wdg.Gridder(a))
+                            self.gridderList.append(Wdg.Gridder(a))
 
                             f = Figure(figsize=(4, 4), dpi=100)
                             plt = f.add_subplot(111)
@@ -836,9 +841,9 @@ class NoteBook(Pmw.NoteBook):
                             toolbar.update()
                             canvas._tkcanvas.pack(side=Tk.TOP, fill=Tk.BOTH, expand=1)
                        
-                    print('thetay',self.datArray[-1])
-                    print('thetax',self.datArray[-2])
-                    print('?',self.datArray[-3])
+                    print(('thetay',self.datArray[-1]))
+                    print(('thetax',self.datArray[-2]))
+                    print(('?',self.datArray[-3]))
     def TorsionFilterPlot(self, sensList):
         initial = int(self.initial)
         final = int(self.final)
@@ -853,10 +858,10 @@ class NoteBook(Pmw.NoteBook):
         
         torStart = int(num.floor(self.ttor*0.25) + 1)
         torEnd = int(num.floor(len(self.datArray[0])-(self.ttor*0.25)-1))
-        print('torsionlist',TorsionList)
-        print('torStart',torStart)
-        print('torEnd',torEnd)
-        print('ln of dict',len(self.chanNamesDict))
+        print(('torsionlist',TorsionList))
+        print(('torStart',torStart))
+        print(('torEnd',torEnd))
+        print(('ln of dict',len(self.chanNamesDict)))
         for i in range(len(self.chanNamesDict)):
            tor = []
            if i in TorsionList:
@@ -893,18 +898,18 @@ class NoteBook(Pmw.NoteBook):
         print('interp1',interp1)
         print('data[i]',self.datArray[0])
         '''
-        print('torfilter',torFilter)
+        print(('torfilter',torFilter))
         #print("self.nsensors",self.nSensors)
         #print("chanNamesDic",self.chanNamesDict[i])
         
         torFilter = num.array(torFilter)
 
-        if 'DiffY' and 'Sum' in self.chanNamesDict.values():
+        if 'DiffY' and 'Sum' in list(self.chanNamesDict.values()):
 
             ## make scatter plot of XY/Sum
             xy = self.nb.add(' XY ')
             self.pageList.append(xy)
-            self.gridderList.append(RO.Wdg.Gridder(xy))
+            self.gridderList.append(Wdg.Gridder(xy))
 
             xyf = Figure(figsize=(4,4), dpi=100)
             plt = xyf.add_subplot(111)
@@ -929,7 +934,7 @@ class NoteBook(Pmw.NoteBook):
             # make diff & sum plot
             '''ds=self.nb.add(' DiffSum ')
                         self.pageList.append(ds)
-                        self.gridderList.append(RO.Wdg.Gridder(ds))
+                        self.gridderList.append(Wdg.Gridder(ds))
 
                         dsf = Figure(figsize=(4,4), dpi=100)
                         plt = dsf.add_subplot(111)
@@ -948,7 +953,7 @@ class NoteBook(Pmw.NoteBook):
             for i in range(self.nSensors):
                 a = self.nb.add(self.chanNamesDict[i])
                 self.pageList.append(a)
-                self.gridderList.append(RO.Wdg.Gridder(a))
+                self.gridderList.append(Wdg.Gridder(a))
 
                 f = Figure(figsize=(4, 4), dpi=100)
                 plt = f.add_subplot(111)
@@ -1043,7 +1048,7 @@ class NoteBook(Pmw.NoteBook):
                 for i in range(self.nSensors):
                         a = self.nb.add(self.chanNamesDict[i])
                         self.pageList.append(a)
-                        self.gridderList.append(RO.Wdg.Gridder(a))
+                        self.gridderList.append(Wdg.Gridder(a))
 
                         f = Figure(figsize=(4, 4), dpi=100)
                         plt = f.add_subplot(111)
@@ -1101,7 +1106,7 @@ class NoteBook(Pmw.NoteBook):
                     for i in range(self.nSensors):
                             a = self.nb.add(self.chanNamesDict[i])
                             self.pageList.append(a)
-                            self.gridderList.append(RO.Wdg.Gridder(a))
+                            self.gridderList.append(Wdg.Gridder(a))
 
                             f = Figure(figsize=(4, 4), dpi=100)
                             plt = f.add_subplot(111)
@@ -1246,7 +1251,7 @@ class NoteBook(Pmw.NoteBook):
                     for j in range(len(fit)):
                             porder = len(fit) - j - 1
                             term += -fit[j] * x ** (len(fit) - j - 1)
-                            print (self.chanNamesDict[i] + '  polycoeff  ' + str(porder) + ': ' + str(fit[j]))
+                            print((self.chanNamesDict[i] + '  polycoeff  ' + str(porder) + ': ' + str(fit[j])))
                     print (' ')
 
                     for k in range(len(y[i])):
@@ -1259,7 +1264,7 @@ class NoteBook(Pmw.NoteBook):
 
                     a = self.nb.add(self.chanNamesDict[i])
                     self.pageList.append(a)
-                    self.gridderList.append(RO.Wdg.Gridder(a))
+                    self.gridderList.append(Wdg.Gridder(a))
 
                     f = Figure(figsize=(4, 4), dpi=100)
                     plt = f.add_subplot(111)
@@ -1506,10 +1511,10 @@ class NoteBook(Pmw.NoteBook):
             plt.plot(x, y2, 'y-')
             plt.plot(x, y3, 'g--')
 
-            x2 = num.array(range(self.ncuts)) * self.cutLength + num.divide(self.cutLength, 2)+self.initial*self.sampleInterval
+            x2 = num.array(list(range(self.ncuts))) * self.cutLength + num.divide(self.cutLength, 2)+self.initial*self.sampleInterval
             plt.errorbar(x2, self.aList[i], yerr=self.aErrList[i], fmt='ro')
 
-            x3 = num.array(range(self.ncuts)) * self.cutLength + num.divide(self.cutLength, 2)+self.initial*self.sampleInterval
+            x3 = num.array(list(range(self.ncuts))) * self.cutLength + num.divide(self.cutLength, 2)+self.initial*self.sampleInterval
             plt.errorbar(x2, self.bList[i], yerr=self.bErrList[i], fmt='go')
 
             if self.calOn.getBool():
@@ -1545,7 +1550,7 @@ class NoteBook(Pmw.NoteBook):
             toolbar.update()
             canvas._tkcanvas.pack(side=Tk.TOP, fill=Tk.BOTH, expand=1)
 
-            cutEntryWdg = RO.Wdg.FloatEntry(a,
+            cutEntryWdg = Wdg.FloatEntry(a,
                                             autoIsCurrent=False,
                                             isCurrent=True,
                                             defValue=None,
@@ -1555,7 +1560,7 @@ class NoteBook(Pmw.NoteBook):
             cutEntryWdg.bind('<Return>', self.FuncCall(self.setCutLevel, var=i))
             cutEntryWdg.pack()
 
-            cutButton = RO.Wdg.Button(
+            cutButton = Wdg.Button(
                 master=a,
                 text='Remove Cuts',
                 width=20,
@@ -1883,7 +1888,7 @@ class NoteBook(Pmw.NoteBook):
 ##        toolbar.update()
 ##        canvas._tkcanvas.pack(side=Tk.TOP, fill=Tk.BOTH, expand=1)
 ##
-##        cutEntryWdg = RO.Wdg.FloatEntry(a,
+##        cutEntryWdg = Wdg.FloatEntry(a,
 ##                                        autoIsCurrent=False,
 ##                                        isCurrent=True,
 ##                                        defValue=self.cutLevels[i],
@@ -1893,7 +1898,7 @@ class NoteBook(Pmw.NoteBook):
 ##        cutEntryWdg.bind('<Return>', self.FuncCall(self.setCutLevel, var=i))
 ##        cutEntryWdg.pack()
 ##
-##        cutButton = RO.Wdg.Button(
+##        cutButton = Wdg.Button(
 ##            master=a,
 ##            text='Remove Cuts',
 ##            width=20,
@@ -1903,8 +1908,8 @@ class NoteBook(Pmw.NoteBook):
 ##
 ##        self.fitWdgList[i] = [cutEntryWdg, cutButton]
 ##
-        print (page, ' sin=', num.mean(a2List), 'sinErr=', num.std(a2List), 'cos=', num.mean(
-            b2List), 'cosErr=', num.std(b2List))
+        print((page, ' sin=', num.mean(a2List), 'sinErr=', num.std(a2List), 'cos=', num.mean(
+            b2List), 'cosErr=', num.std(b2List)))
 
         self.cutAttempt = 1
 
@@ -1920,7 +1925,7 @@ class NoteBook(Pmw.NoteBook):
         s = self.harmWdg.get()
 
         if len(s) > 0:
-            self.harmList = map(float, s.split())
+            self.harmList = list(map(float, s.split()))
             self.nHarms = len(self.harmList)
 
         else:
